@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Admin Panel – Student Leads</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #f7f7f7;
+        padding: 2rem;
+      }
+      h1 {
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+      button {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-bottom: 20px;
+      }
+      table {
+        width: 100%;
+        background: white;
+        border-collapse: collapse;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      th,
+      td {
+        padding: 12px;
+        border: 1px solid #ddd;
+      }
+      th {
+        background: #f1f1f1;
+      }
+      .container {
+        max-width: 1000px;
+        margin: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>📊 Student Leads Dashboard</h1>
+      <button onclick="exportToExcel()">Export to Excel</button>
+      <table id="studentTable">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Rank</th>
+            <th>Category</th>
+            <th>Submitted On</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Data will go here -->
+        </tbody>
+      </table>
+    </div>
+
+    <script>
+      const supabase = window.supabase.createClient(
+        "https://liuwlxdhlrmwobrotnfy.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxpdXdseGRobHJtd29icm90bmZ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ4NzA5MjUsImV4cCI6MjA2MDQ0NjkyNX0.IT81Y86xluIxa8j7ZQJlm_4GVRslsaqXoG-DE9OQnh4"
+      );
+
+      async function loadStudents() {
+        const { data, error } = await supabase
+          .from("leads") // make sure your table is called "leads"
+          .select("*");
+
+        if (error) {
+          alert("Error loading data");
+          console.error(error);
+          return;
+        }
+
+        const tbody = document.querySelector("#studentTable tbody");
+        tbody.innerHTML = "";
+
+        data.forEach((student) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+          <td>${student.name}</td>
+          <td>${student.email}</td>
+          <td>${student.phone}</td>
+          <td>${student.rank}</td>
+          <td>${student.category || "-"}</td>
+          <td>${new Date(student.created_at).toLocaleString()}</td>
+        `;
+          tbody.appendChild(tr);
+        });
+
+        window.studentsData = data;
+      }
+
+      function exportToExcel() {
+        if (!window.studentsData || window.studentsData.length === 0) {
+          alert("No data to export.");
+          return;
+        }
+        const worksheet = XLSX.utils.json_to_sheet(window.studentsData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "StudentLeads");
+        XLSX.writeFile(workbook, "student_leads.xlsx");
+      }
+
+      window.onload = loadStudents;
+    </script>
+  </body>
+</html>
